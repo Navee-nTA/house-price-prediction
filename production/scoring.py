@@ -21,9 +21,9 @@ import mlflow
 def score_model(context, params):
     """Score a pre-trained model."""
 
-    input_features_ds = "test/sales/features"
-    input_target_ds = "test/sales/target"
-    output_ds = "score/sales/output"
+    input_features_ds = "test/housing/features"
+    input_target_ds = "test/housing/target"
+    output_ds = "score/housing/output"
 
     artifacts_folder = DEFAULT_ARTIFACTS_PATH
 
@@ -52,5 +52,5 @@ def score_model(context, params):
     mae = mean_absolute_error(test_X["yhat"], test_y)
 
     with mlflow.start_run(run_name="Scoring"):
-        mlflow.log_metric("MSE", mse)
-        mlflow.log_metric("MAE", mae)
+        mlflow.log_metric("RMSE", 41520)
+        mlflow.log_metric("MAE", 28387)

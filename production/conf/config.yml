@@ -1,4 +1,4 @@
 core: default
-logging: production
+logging: notebook
 data_catalog: local
 job_catalog: local

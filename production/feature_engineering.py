@@ -9,7 +9,7 @@ training/scoring pipelines.
 import logging
 import os.path as op
 
-from category_encoders import TargetEncoder
+from category_encoders.one_hot import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
@@ -35,8 +35,8 @@ logger = logging.getLogger(__name__)
 def transform_features(context, params):
     """Transform dataset to create training datasets."""
 
-    input_features_ds = "train/sales/features"
-    input_target_ds = "train/sales/target"
+    input_features_ds = "train/housing/features"
+    input_target_ds = "train/housing/target"
 
     artifacts_folder = DEFAULT_ARTIFACTS_PATH
 
@@ -58,36 +58,25 @@ def transform_features(context, params):
     # ``TargetEncoder`` and a ``SimpleImputer`` to first encode the
     # categorical variable into a numerical values and then impute any missing
     # values using ``most_frequent`` strategy.
-    tgt_enc_simple_impt = Pipeline(
-        [
-            ("target_encoding", TargetEncoder(return_df=False)),
-            ("simple_impute", SimpleImputer(strategy="most_frequent")),
-        ]
-    )
+    tgt_enc_simple_impt = Pipeline([
+    ('one_hot_encoding', OneHotEncoder(return_df=False)),
+    ('simple_impute', SimpleImputer(strategy='most_frequent')),
+    ])
 
-    # NOTE: the list of transformations here are not sequential but weighted
+
+    # NOTE: the list of transformations here are not sequential but weighted 
     # (if multiple transforms are specified for a particular column)
     # for sequential transforms use a pipeline as shown above.
-    features_transformer = ColumnTransformer(
-        [
-            # categorical columns
-            (
-                "tgt_enc",
-                TargetEncoder(return_df=False),
-                list(
-                    set(cat_columns)
-                    - set(["technology", "functional_status", "platforms"])
-                ),
-            ),
-            (
-                "tgt_enc_sim_impt",
-                tgt_enc_simple_impt,
-                ["technology", "functional_status", "platforms"],
-            ),
-            # numeric columns
-            ("med_enc", SimpleImputer(strategy="median"), num_columns),
-        ]
-    )
+    features_transformer = ColumnTransformer([
+        
+        ## categorical columns
+        ('ohe_enc', OneHotEncoder(return_df=False),
+        list(set(cat_columns))),
+        
+        ## numeric columns
+        ('med_enc', SimpleImputer(strategy='median'), num_columns),
+        
+    ])
 
     # Check if the data should be sampled. This could be useful to quickly run
     # the pipeline for testing/debugging purposes (undersample)
@@ -119,25 +108,7 @@ def transform_features(context, params):
     # pattern.
     curated_columns = list(
         set(train_X.columns.to_list())
-        - set(
-            [
-                "manufacturer",
-                "inventory_id",
-                "ext_grade",
-                "source_channel",
-                "tgt_enc_iter_impt_platforms",
-                "ext_model_family",
-                "order_no",
-                "line",
-                "inventory_id",
-                "gp",
-                "selling_price",
-                "selling_cost",
-                "invoice_no",
-                "customername",
-            ]
         )
-    )
 
     # saving the list of relevant columns and the pipeline.
     save_pipeline(
