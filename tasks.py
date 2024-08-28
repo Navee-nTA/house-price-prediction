@@ -361,6 +361,8 @@ def setup_env(
             usecase_file = op.abspath(op.join(CONDA_ENV_FOLDER, f"ct-rtm-{env}.yml"))
         elif usecase == "reco":
             usecase_file = op.abspath(op.join(CONDA_ENV_FOLDER, f"ct-reco-{env}.yml"))
+        elif usecase == "hpp": #HousePricePrediction - hpp
+            usecase_file = op.abspath(op.join(CONDA_ENV_FOLDER, f"ct-hpp-{env}.yml"))
         else:
             raise FileNotFoundError(
                 "This is not a valid usecase. Valid usecases -> tpo or rtm or mmx or ebo"
@@ -1173,6 +1175,23 @@ def start_ipython_shell(c, platform=PLATFORM, env=DEV_ENV):
     with py_env(c, env_name):
         c.run(f"""ipython -i "{startup_script}" """)
 
+@task(name="ctx")
+def complexity(ctx):
+    import subprocess
+    import radon
+    """
+    Calculate the complexity score for the codebase using Radon.
+    """
+    # Run Radon's `cc` command to get the complexity of the codebase
+    result = subprocess.run(['radon', 'cc', '.', '--total-average'], capture_output=True, text=True)
+
+    # Check if the command was successful
+    if result.returncode == 0:
+        print("Complexity Score:\n")
+        print(result.stdout)
+    else:
+        print("Error calculating complexity score.")
+        print(result.stderr)
 
 _create_task_collection(
     "launch",
@@ -1181,6 +1200,7 @@ _create_task_collection(
     start_tracker_ui,
     start_docs_server,
     start_ipython_shell,
+    complexity,
 )
 
 
